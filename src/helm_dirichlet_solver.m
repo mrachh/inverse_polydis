@@ -44,6 +44,7 @@ else
     cparams_use = cparams;
 end
 pref.k = 16;
+pref.dim = 2;
 chnkr = chunkerpoly(verts,cparams_use,pref);
     
 fkern = @(s,t) chnk.helm2d.kern(zk,s,t,'C',1);
