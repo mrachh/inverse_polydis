@@ -1,4 +1,5 @@
 addpath('../src');
+clear
 verts = [0,1,1,0;0,0,1,1];
 xyin = [0.3;0.4];
 zk = 1.1;
@@ -7,8 +8,11 @@ targs = [3.1, 4.2, 4; -1.7,2.5,-3.6];
 
 [u,u_grad,chnkr,grad,bd_sol,bd_data_grad,bd_sol_grad,F,err_est] = ...
    helm_dirichlet_solver_wgrad(verts,zk,targs,angs,xyin);
-
-pert = randn(2,nv);
+[~,nv] = size(verts);
+nangs = length(angs);
+n = chnkr.k*chnkr.nch;
+[~,nt] = size(targs);
+pert = randn(size(verts));
 [n,nangs,~,~] = size(u_grad);
 u_grad_test = reshape(u_grad,[n,nangs,2*nv]);
 u_grad_test = reshape(u_grad_test, [n*nangs,2*nv]);
