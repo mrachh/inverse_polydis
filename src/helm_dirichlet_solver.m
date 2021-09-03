@@ -80,7 +80,6 @@ yval = rval(2,:);
 uinc = -exp(1i*zk*(xval'*cos(angs)' + yval'*sin(angs)'));
 bd_sol = rskelf_sv(F,uinc);
 varargout{2} = bd_sol;
-disp(size(bd_sol));
 nt = length(targs);
 nangs = length(angs);
 u = complex(zeros(nt,nangs));
