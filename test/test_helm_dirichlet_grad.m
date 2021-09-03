@@ -1,5 +1,4 @@
 addpath('../src');
-clear
 verts = [0,1,1,0;0,0,1,1];
 xyin = [0.3;0.4];
 zk = 1.1;
