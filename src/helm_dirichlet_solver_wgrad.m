@@ -59,6 +59,9 @@ pref.dim = 2;
 % Get chunk info
 
 chnkr = chunkerpoly(verts,cparams_use,pref);
+ref_opt = struct();
+ref_opt.maxchunklen = pi/abs(zk);
+chnkr = refine(chnkr,ref_opt);
 rn = normals(chnkr);
 rn = reshape(rn,[2,chnkr.k*chnkr.nch]);
 
@@ -71,6 +74,12 @@ dval = 0.5;
 opts_flam = [];
 opts_flam.flamtype = 'rskelf';
 opts_flam.rank_or_tol = 1e-10;
+
+opts_chunkerkerneval = [];
+opts_chunkerkerneval.flam = false;
+opts_chunkerkerneval.forcesmooth = true;
+
+
 F = [];
 F.C = chunkerflam(chnkr,fkern,dval,opts_flam);
 
@@ -87,19 +96,31 @@ F.Sprime = chunkerflam(chnkr,fkern_sp,dval_sp,opts_flam);
 
 
 % Test exact solution
-srcinfo = []; srcinfo.r = xyin; targinfo = []; targinfo.r = chnkr.r;
-targinfo.r = reshape(targinfo.r,2,chnkr.k*chnkr.nch);
+srcinfo_test = []; srcinfo_test.r = xyin; targinfo_test = []; 
+targinfo_test.r = chnkr.r;
+targinfo_test.r = reshape(targinfo_test.r,2,chnkr.k*chnkr.nch);
 
-bd_test = chnk.helm2d.kern(zk,srcinfo,targinfo,'s');
+bd_test = chnk.helm2d.kern(zk,srcinfo_test,targinfo_test,'s');
 
 bd_sol_ex = rskelf_sv(F.C,bd_test);
 
 
-utest = chunkerkerneval(chnkr,fkern,bd_sol_ex,targs);
-
+srcinfo = [];
 targinfo = [];
+srcinfo.r = chnkr.r;
+srcinfo.d = chnkr.d;
+srcinfo.r = reshape(srcinfo.r,2,chnkr.k*chnkr.nch);
+srcinfo.d = reshape(srcinfo.d,2,chnkr.k*chnkr.nch);
 targinfo.r = targs;
-uex = chnk.helm2d.kern(zk,srcinfo,targinfo,'s');
+xkern = chnk.helm2d.kern(zk,srcinfo,targinfo,'C',1);
+wts = weights(chnkr);
+wts = reshape(wts,chnkr.k*chnkr.nch,1);
+bd_sol_ex0 = bd_sol_ex.*wts;
+utest = xkern*bd_sol_ex0;
+
+targinfo_test = [];
+targinfo_test.r = targs;
+uex = chnk.helm2d.kern(zk,srcinfo_test,targinfo_test,'s');
 
 err_exact = norm(utest-uex,'fro')/norm(uex,'fro');
 
@@ -122,9 +143,10 @@ u = complex(zeros(nt,nangs));
 [~,nv] = size(verts);
 
 % Compute scattered field at target locations
-for i=1:nangs
-    u(:,i) = chunkerkerneval(chnkr,fkern,bd_sol(:,i),targs);
-end
+
+wts_rep = repmat(wts,[1,nangs]);
+bd_sol0 = bd_sol.*wts_rep;
+u = xkern*bd_sol0;
 
 % Compute neumann data corresponding to incident fields
 [n,~] = size(uinc);
@@ -148,9 +170,8 @@ for i=1:2*nv
     gdotrep = repmat(gdot,[1,nangs]);
     bd_data_grad(:,:,i) = -gdotrep.*dudn;
     bd_sol_grad(:,:,i) = rskelf_sv(F.C,bd_data_grad(:,:,i));
-    for j=1:nangs
-        u_grad(:,j,i) = chunkerkerneval(chnkr,fkern,bd_sol_grad(:,j,i),targs);
-    end
+    bd_sol_grad0 = bd_sol_grad(:,:,i).*wts_rep;
+    u_grad(:,:,i) = xkern*bd_sol_grad0;
 end
 
 u_grad = reshape(u_grad,[nt,nangs,2,nv]);

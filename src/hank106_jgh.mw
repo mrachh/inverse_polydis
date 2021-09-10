@@ -1,0 +1,33 @@
+%------------------------------------------------------
+@function [ww,lw,ier] = hankm106_ini()
+%
+%     
+  
+  lw = 50000;
+  ww = zeros(lw,1);
+  ier= 0;
+
+  # FORTRAN hank106datagen_r( inout double[lw] ww, inout int[1] lw, inout int[1] ier);
+
+end
+%
+%
+%------------------------------------------------------
+%------------------------------------------------------
+@function [h0,h1] = hankm106(r,w,lw,intnum)
+%
+%     
+  
+  asize = size(r);
+  tsize = numel(r);
+  
+  
+  # FORTRAN hank106_wrap(input double[tsize] r, output dcomplex[tsize] h0, output dcomplex[tsize] h1,input double[lw] w,input int lw,int intnum,input int tsize);
+
+  h0 = reshape(h0,asize);
+  h1 = reshape(h1,asize);
+
+end
+%
+%
+%------------------------------------------------------
